@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="利回り計算">
+<meta name="theme-color" content="#1C1C1E">
+<link rel="manifest" href="manifest.json">
+<title>区分マンション 利回り計算</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  :root{
+    --bg:#F2F2F7;--card:#FFFFFF;--card2:#F2F2F7;
+    --text:#1C1C1E;--text2:#3C3C43;--text3:#8E8E93;
+    --sep:#C6C6C8;--sep2:#E5E5EA;
+    --accent:#34C759;--accent-mid:#FF9500;--accent-bad:#FF3B30;
+    --accent-blue:#007AFF;
+    --input-bg:#FFFFFF;
+    --rank1:#FFD700;--rank2:#C0C0C0;--rank3:#CD7F32;
+  }
+  @media(prefers-color-scheme:dark){
+    :root{
+      --bg:#1C1C1E;--card:#2C2C2E;--card2:#3A3A3C;
+      --text:#FFFFFF;--text2:#EBEBF5CC;--text3:#8E8E93;
+      --sep:#38383A;--sep2:#48484A;
+      --input-bg:#1C1C1E;
+    }
+  }
+  html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans',sans-serif;font-size:16px;line-height:1.4;}
+  body{display:flex;flex-direction:column;max-width:430px;margin:0 auto;}
+
+  /* Header */
+  .header{
+    background:var(--card);border-bottom:0.5px solid var(--sep);
+    padding:calc(env(safe-area-inset-top) + 12px) 20px 12px;
+    text-align:center;position:sticky;top:0;z-index:10;
+    backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  }
+  .header h1{font-size:17px;font-weight:600;letter-spacing:-.2px;}
+
+  /* Content */
+  .content{flex:1;overflow-y:auto;padding:16px 16px 0;padding-bottom:calc(env(safe-area-inset-bottom) + 80px);}
+
+  /* Section label */
+  .section-label{font-size:13px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin:20px 0 6px 4px;}
+
+  /* Card */
+  .card{background:var(--card);border-radius:12px;overflow:hidden;margin-bottom:12px;}
+  .card-row{display:flex;align-items:center;padding:13px 16px;border-bottom:.5px solid var(--sep2);gap:10px;}
+  .card-row:last-child{border-bottom:none;}
+  .row-label{font-size:15px;color:var(--text);flex:1;white-space:nowrap;}
+  .row-input{display:flex;align-items:center;gap:4px;}
+  .row-input input{
+    background:transparent;border:none;outline:none;
+    font-size:16px;font-weight:500;color:var(--text);
+    text-align:right;width:100px;
+    -moz-appearance:textfield;
+  }
+  .row-input input::-webkit-inner-spin-button,
+  .row-input input::-webkit-outer-spin-button{-webkit-appearance:none;}
+  .row-input input::placeholder{color:var(--text3);}
+  .row-unit{font-size:15px;color:var(--text3);white-space:nowrap;}
+
+  /* Result */
+  .result-card{background:var(--card);border-radius:12px;padding:20px 16px;margin-bottom:12px;}
+  .result-main{text-align:center;margin-bottom:16px;}
+  .result-label{font-size:13px;color:var(--text3);margin-bottom:4px;}
+  .result-num{font-size:56px;font-weight:700;line-height:1;letter-spacing:-2px;transition:color .2s;}
+  .result-num.good{color:var(--accent);}
+  .result-num.mid{color:var(--accent-mid);}
+  .result-num.bad{color:var(--accent-bad);}
+  .result-num.empty{color:var(--text3);}
+  .result-pct{font-size:28px;font-weight:400;}
+  .result-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+  .mini{background:var(--bg);border-radius:10px;padding:10px 12px;}
+  .mini-label{font-size:11px;color:var(--text3);margin-bottom:3px;}
+  .mini-val{font-size:15px;font-weight:600;color:var(--text);}
+
+  /* Record section */
+  .record-box{background:var(--card);border-radius:12px;padding:16px;margin-bottom:12px;display:none;}
+  .record-box.visible{display:block;}
+  .record-title{font-size:13px;color:var(--text3);margin-bottom:10px;}
+  .record-rank{font-size:22px;font-weight:700;color:var(--accent-blue);margin-bottom:10px;}
+  .record-input-row{display:flex;gap:10px;align-items:center;}
+  .record-input{
+    flex:1;background:var(--bg);border:none;outline:none;
+    border-radius:10px;padding:12px 14px;
+    font-size:16px;color:var(--text);
+  }
+  .record-input::placeholder{color:var(--text3);}
+  .record-btn{
+    background:var(--accent-blue);color:#fff;border:none;
+    border-radius:10px;padding:12px 18px;font-size:15px;font-weight:600;
+    white-space:nowrap;cursor:pointer;
+  }
+  .record-btn:active{opacity:.7;}
+
+  /* Calc button */
+  .calc-btn{
+    width:100%;background:var(--accent-blue);color:#fff;border:none;
+    border-radius:12px;padding:16px;font-size:17px;font-weight:600;
+    cursor:pointer;margin-bottom:12px;
+  }
+  .calc-btn:active{opacity:.8;}
+
+  /* Bottom tab */
+  .tabbar{
+    position:fixed;bottom:0;left:50%;transform:translateX(-50%);
+    width:100%;max-width:430px;
+    background:var(--card);border-top:.5px solid var(--sep);
+    display:flex;padding-bottom:env(safe-area-inset-bottom);
+    z-index:20;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  }
+  .tab{flex:1;display:flex;flex-direction:column;align-items:center;padding:8px 0 6px;cursor:pointer;gap:2px;}
+  .tab-icon{font-size:22px;color:var(--text3);}
+  .tab-label{font-size:10px;color:var(--text3);}
+  .tab.active .tab-icon,.tab.active .tab-label{color:var(--accent-blue);}
+
+  /* History */
+  .hist-empty{text-align:center;color:var(--text3);font-size:15px;padding:40px 0;}
+  .hist-item{
+    background:var(--card);border-radius:12px;
+    display:flex;align-items:center;gap:12px;
+    padding:14px 16px;margin-bottom:10px;
+  }
+  .rank-badge{
+    width:34px;height:34px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-size:15px;font-weight:700;flex-shrink:0;
+  }
+  .rank-1{background:#FFD70022;color:#B8860B;}
+  .rank-2{background:#C0C0C022;color:#808080;}
+  .rank-3{background:#CD7F3222;color:#8B4513;}
+  .rank-other{background:var(--bg);color:var(--text3);}
+  .hist-info{flex:1;min-width:0;}
+  .hist-name{font-size:16px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .hist-sub{font-size:12px;color:var(--text3);margin-top:2px;}
+  .hist-yield{text-align:right;flex-shrink:0;}
+  .hist-yield-val{font-size:20px;font-weight:700;}
+  .hist-yield-val.good{color:var(--accent);}
+  .hist-yield-val.mid{color:var(--accent-mid);}
+  .hist-yield-val.bad{color:var(--accent-bad);}
+  .hist-yield-pct{font-size:13px;color:var(--text3);}
+  .hist-del{background:none;border:none;color:var(--text3);font-size:18px;padding:4px 8px;cursor:pointer;margin-left:4px;}
+
+  /* Pages */
+  .page{display:none;}
+  .page.active{display:block;}
+
+  /* Splash badge */
+  .splash{
+    position:fixed;inset:0;background:var(--accent-blue);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    z-index:100;transition:opacity .4s;
+  }
+  .splash-icon{font-size:64px;margin-bottom:16px;}
+  .splash-title{color:#fff;font-size:22px;font-weight:700;}
+  .splash-sub{color:rgba(255,255,255,.7);font-size:14px;margin-top:6px;}
+  .splash.hidden{opacity:0;pointer-events:none;}
+</style>
+</head>
+<body>
+
+<!-- Splash -->
+<div class="splash" id="splash">
+  <div class="splash-icon">🏢</div>
+  <div class="splash-title">利回り計算</div>
+  <div class="splash-sub">区分マンション投資</div>
+</div>
+
+<!-- Header -->
+<div class="header">
+  <h1 id="page-title">利回り計算</h1>
+</div>
+
+<!-- Content -->
+<div class="content">
+
+  <!-- Page: Calculator -->
+  <div class="page active" id="page-calc">
+
+    <div class="section-label">物件情報</div>
+    <div class="card">
+      <div class="card-row">
+        <span class="row-label">物件価格</span>
+        <div class="row-input">
+          <input type="number" id="price" placeholder="3000" inputmode="decimal">
+          <span class="row-unit">万円</span>
+        </div>
+      </div>
+      <div class="card-row">
+        <span class="row-label">月額家賃</span>
+        <div class="row-input">
+          <input type="number" id="rent" placeholder="10" inputmode="decimal">
+          <span class="row-unit">万円</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-label">月額費用</div>
+    <div class="card">
+      <div class="card-row">
+        <span class="row-label">管理費</span>
+        <div class="row-input">
+          <input type="number" id="mgmt" placeholder="1.0" inputmode="decimal">
+          <span class="row-unit">万円</span>
+        </div>
+      </div>
+      <div class="card-row">
+        <span class="row-label">修繕積立金</span>
+        <div class="row-input">
+          <input type="number" id="repair" placeholder="0.5" inputmode="decimal">
+          <span class="row-unit">万円</span>
+        </div>
+      </div>
+      <div class="card-row">
+        <span class="row-label">賃貸管理費用</span>
+        <div class="row-input">
+          <input type="number" id="rental_mgmt" placeholder="0.5" inputmode="decimal">
+          <span class="row-unit">万円</span>
+        </div>
+      </div>
+    </div>
+
+    <button class="calc-btn" onclick="calculate()">計算する</button>
+
+    <!-- Result -->
+    <div class="result-card" id="result-card">
+      <div class="result-main">
+        <div class="result-label">ネット利回り</div>
+        <div class="result-num empty" id="net-yield">—<span class="result-pct"></span></div>
+      </div>
+      <div class="result-grid">
+        <div class="mini"><div class="mini-label">グロス利回り</div><div class="mini-val" id="gross">—</div></div>
+        <div class="mini"><div class="mini-label">年間手取り</div><div class="mini-val" id="annual-net">—</div></div>
+        <div class="mini"><div class="mini-label">月間手取り</div><div class="mini-val" id="monthly-net">—</div></div>
+        <div class="mini"><div class="mini-label">年間家賃収入</div><div class="mini-val" id="annual-rent">—</div></div>
+        <div class="mini"><div class="mini-label">年間経費</div><div class="mini-val" id="annual-cost">—</div></div>
+        <div class="mini"><div class="mini-label">経費率</div><div class="mini-val" id="cost-rate">—</div></div>
+      </div>
+    </div>
+
+    <!-- Record box -->
+    <div class="record-box" id="record-box">
+      <div class="record-title">🏆 TOP 10 ランクイン！</div>
+      <div class="record-rank" id="record-rank-label"></div>
+      <div class="record-input-row">
+        <input class="record-input" type="text" id="prop-name" placeholder="物件名を入力…">
+        <button class="record-btn" onclick="saveRecord()">保存</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Page: History -->
+  <div class="page" id="page-hist">
+    <div class="section-label">ベスト10</div>
+    <div id="hist-list">
+      <div class="hist-empty">まだ記録がありません</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Tab bar -->
+<div class="tabbar">
+  <div class="tab active" id="tab-calc" onclick="switchTab('calc')">
+    <span class="tab-icon">🧮</span>
+    <span class="tab-label">計算</span>
+  </div>
+  <div class="tab" id="tab-hist" onclick="switchTab('hist')">
+    <span class="tab-icon">🏆</span>
+    <span class="tab-label">ランキング</span>
+  </div>
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────────
+let history = JSON.parse(localStorage.getItem('yield_history') || '[]');
+let lastResult = null;
+
+// ── Splash ─────────────────────────────────────────────
+setTimeout(() => {
+  document.getElementById('splash').classList.add('hidden');
+  setTimeout(() => document.getElementById('splash').remove(), 500);
+}, 1200);
+
+// ── Tab switch ─────────────────────────────────────────
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  document.getElementById('page-' + tab).classList.add('active');
+  document.getElementById('page-title').textContent = tab === 'calc' ? '利回り計算' : 'ランキング TOP10';
+  if (tab === 'hist') renderHistory();
+}
+
+// ── Calculate ──────────────────────────────────────────
+function calculate() {
+  const price       = parseFloat(document.getElementById('price').value) || 0;
+  const rent        = parseFloat(document.getElementById('rent').value) || 0;
+  const mgmt        = parseFloat(document.getElementById('mgmt').value) || 0;
+  const repair      = parseFloat(document.getElementById('repair').value) || 0;
+  const rental_mgmt = parseFloat(document.getElementById('rental_mgmt').value) || 0;
+
+  if (!price || !rent) {
+    alert('物件価格と月額家賃を入力してください');
+    return;
+  }
+
+  const annualRent  = rent * 12;
+  const monthlyExp  = mgmt + repair + rental_mgmt;
+  const annualExp   = monthlyExp * 12;
+  const annualNet   = annualRent - annualExp;
+  const monthlyNet  = rent - monthlyExp;
+  const grossYield  = (annualRent / price) * 100;
+  const netYield    = (annualNet / price) * 100;
+  const costRate    = rent > 0 ? (monthlyExp / rent) * 100 : 0;
+
+  lastResult = { price, rent, mgmt, repair, rental_mgmt, netYield, grossYield, annualRent, annualExp, annualNet, monthlyNet, costRate };
+
+  // Update result display
+  const el = document.getElementById('net-yield');
+  el.innerHTML = netYield.toFixed(2) + '<span class="result-pct">%</span>';
+  el.className = 'result-num ' + (netYield >= 5 ? 'good' : netYield >= 3 ? 'mid' : 'bad');
+
+  document.getElementById('gross').textContent       = grossYield.toFixed(2) + '%';
+  document.getElementById('annual-rent').textContent  = annualRent.toFixed(1) + '万円';
+  document.getElementById('annual-cost').textContent  = annualExp.toFixed(1) + '万円';
+  document.getElementById('annual-net').textContent   = annualNet.toFixed(1) + '万円';
+  document.getElementById('monthly-net').textContent  = monthlyNet.toFixed(2) + '万円';
+  document.getElementById('cost-rate').textContent    = costRate.toFixed(1) + '%';
+
+  // Check rank
+  const rank = getRank(netYield);
+  const box  = document.getElementById('record-box');
+  document.getElementById('prop-name').value = '';
+
+  if (rank !== null) {
+    document.getElementById('record-rank-label').textContent = rankLabel(rank) + ' にランクイン見込み';
+    box.classList.add('visible');
+    box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  } else {
+    box.classList.remove('visible');
+  }
+}
+
+// ── Rank logic ─────────────────────────────────────────
+function getRank(netYield) {
+  // Sort existing history descending, find where this would fit
+  const sorted = [...history].sort((a, b) => b.netYield - a.netYield);
+  for (let i = 0; i < Math.min(sorted.length, 10); i++) {
+    if (netYield > sorted[i].netYield) return i + 1; // 1-indexed
+  }
+  if (sorted.length < 10) return sorted.length + 1;
+  return null; // doesn't make top 10
+}
+
+function rankLabel(rank) {
+  if (rank === 1) return '🥇 第1位';
+  if (rank === 2) return '🥈 第2位';
+  if (rank === 3) return '🥉 第3位';
+  return `第${rank}位`;
+}
+
+// ── Save record ────────────────────────────────────────
+function saveRecord() {
+  if (!lastResult) return;
+  const name = document.getElementById('prop-name').value.trim() || '物件名未設定';
+  const now  = new Date();
+  const date = `${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')}`;
+
+  history.push({ ...lastResult, name, date, id: Date.now() });
+  // Keep best 10 by netYield
+  history.sort((a, b) => b.netYield - a.netYield);
+  history = history.slice(0, 10);
+
+  localStorage.setItem('yield_history', JSON.stringify(history));
+
+  document.getElementById('record-box').classList.remove('visible');
+  lastResult = null;
+
+  // Feedback
+  const btn = document.querySelector('.record-btn');
+  btn.textContent = '✓ 保存済';
+  btn.style.background = '#34C759';
+  setTimeout(() => { btn.textContent = '保存'; btn.style.background = ''; }, 2000);
+}
+
+// ── Delete record ──────────────────────────────────────
+function deleteRecord(id) {
+  if (!confirm('この記録を削除しますか？')) return;
+  history = history.filter(h => h.id !== id);
+  localStorage.setItem('yield_history', JSON.stringify(history));
+  renderHistory();
+}
+
+// ── Render history ─────────────────────────────────────
+function renderHistory() {
+  const container = document.getElementById('hist-list');
+  if (history.length === 0) {
+    container.innerHTML = '<div class="hist-empty">まだ記録がありません<br><span style="font-size:13px;margin-top:8px;display:block">計算してランクインしたら保存できます</span></div>';
+    return;
+  }
+  const sorted = [...history].sort((a, b) => b.netYield - a.netYield);
+  container.innerHTML = sorted.map((h, i) => {
+    const rank = i + 1;
+    const rankClass = rank === 1 ? 'rank-1' : rank === 2 ? 'rank-2' : rank === 3 ? 'rank-3' : 'rank-other';
+    const yieldClass = h.netYield >= 5 ? 'good' : h.netYield >= 3 ? 'mid' : 'bad';
+    const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank;
+    return `
+    <div class="hist-item">
+      <div class="rank-badge ${rankClass}">${medal}</div>
+      <div class="hist-info">
+        <div class="hist-name">${escHtml(h.name)}</div>
+        <div class="hist-sub">${h.price}万円 ／ 家賃${h.rent}万円 ／ ${h.date}</div>
+      </div>
+      <div class="hist-yield">
+        <div class="hist-yield-val ${yieldClass}">${h.netYield.toFixed(2)}</div>
+        <div class="hist-yield-pct">% net</div>
+      </div>
+      <button class="hist-del" onclick="deleteRecord(${h.id})">✕</button>
+    </div>`;
+  }).join('');
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Service worker ──────────────────────────────────────
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js');
+}
+</script>
+</body>
+</html>
