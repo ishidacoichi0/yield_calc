@@ -1,4 +1,4 @@
-const CACHE = 'yield-calc-v1';
+const CACHE = 'yield-calc-v2';
 const ASSETS = ['./', './index.html', './manifest.json'];
 
 self.addEventListener('install', e => {

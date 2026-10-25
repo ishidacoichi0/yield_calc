@@ -1,7 +1,7 @@
 {
-  "name": "区分マンション 利回り計算",
+  "name": "不動産 利回り計算",
   "short_name": "利回り計算",
-  "description": "区分マンションのネット利回りを計算するアプリ",
+  "description": "区分・一棟物件の利回りとキャッシュフローを計算するアプリ",
   "start_url": ".",
   "display": "standalone",
   "orientation": "portrait",

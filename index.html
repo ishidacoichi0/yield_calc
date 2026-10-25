@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="利回り計算">
 <meta name="theme-color" content="#1C1C1E">
 <link rel="manifest" href="manifest.json">
-<title>区分マンション 利回り計算</title>
+<title>不動産 利回り計算</title>
 <style>
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
   :root{
@@ -97,6 +97,12 @@
   }
   .record-btn:active{opacity:.7;}
 
+  /* Mode switch */
+  .seg{display:flex;background:var(--sep2);border-radius:9px;padding:2px;margin-top:4px;}
+  .seg-btn{flex:1;border:none;background:transparent;color:var(--text);font-size:14px;font-weight:500;padding:7px 0;border-radius:7px;cursor:pointer;}
+  .seg-btn.active{background:var(--card);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.12);}
+  .mode-kubun .only-ittou,.mode-ittou .only-kubun{display:none;}
+
   /* Calc button */
   .calc-btn{
     width:100%;background:var(--accent-blue);color:#fff;border:none;
@@ -143,6 +149,7 @@
   .hist-yield-val.mid{color:var(--accent-mid);}
   .hist-yield-val.bad{color:var(--accent-bad);}
   .hist-yield-pct{font-size:13px;color:var(--text3);}
+  .hist-tag{display:inline-block;font-size:10px;font-weight:600;color:var(--accent-blue);border:1px solid var(--accent-blue);border-radius:4px;padding:0 4px;margin-right:4px;vertical-align:1px;}
   .hist-del{background:none;border:none;color:var(--text3);font-size:18px;padding:4px 8px;cursor:pointer;margin-left:4px;}
 
   /* Pages */
@@ -167,7 +174,7 @@
 <div class="splash" id="splash">
   <div class="splash-icon">🏢</div>
   <div class="splash-title">利回り計算</div>
-  <div class="splash-sub">区分マンション投資</div>
+  <div class="splash-sub">区分・一棟 不動産投資</div>
 </div>
 
 <!-- Header -->
@@ -179,8 +186,14 @@
 <div class="content">
 
   <!-- Page: Calculator -->
-  <div class="page active" id="page-calc">
+  <div class="page active mode-kubun" id="page-calc">
 
+    <div class="seg">
+      <button class="seg-btn active" id="seg-kubun" onclick="setMode('kubun')">区分</button>
+      <button class="seg-btn" id="seg-ittou" onclick="setMode('ittou')">一棟</button>
+    </div>
+
+    <div class="only-kubun">
     <div class="section-label">物件情報</div>
     <div class="card">
       <div class="card-row">
@@ -223,22 +236,100 @@
         </div>
       </div>
     </div>
+    </div>
+
+    <div class="only-ittou">
+    <div class="section-label">物件情報</div>
+    <div class="card">
+      <div class="card-row">
+        <span class="row-label">物件価格</span>
+        <div class="row-input"><input type="number" id="b_price" placeholder="12100" inputmode="decimal"><span class="row-unit">万円</span></div>
+      </div>
+      <div class="card-row">
+        <span class="row-label">満室時月額家賃</span>
+        <div class="row-input"><input type="number" id="b_rent" placeholder="65.7" inputmode="decimal"><span class="row-unit">万円</span></div>
+      </div>
+    </div>
+
+    <div class="section-label">運営費</div>
+    <div class="card">
+      <div class="card-row">
+        <span class="row-label">空室率</span>
+        <div class="row-input"><input type="number" id="b_vacancy" value="5" inputmode="decimal"><span class="row-unit">%</span></div>
+      </div>
+      <div class="card-row">
+        <span class="row-label">賃貸管理費（PM）</span>
+        <div class="row-input"><input type="number" id="b_pm" value="5" inputmode="decimal"><span class="row-unit">%</span></div>
+      </div>
+      <div class="card-row">
+        <span class="row-label">清掃・建物管理</span>
+        <div class="row-input"><input type="number" id="b_bm" placeholder="2" inputmode="decimal"><span class="row-unit">万円/月</span></div>
+      </div>
+      <div class="card-row">
+        <span class="row-label">固都税</span>
+        <div class="row-input"><input type="number" id="b_tax" placeholder="28" inputmode="decimal"><span class="row-unit">万円/年</span></div>
+      </div>
+      <div class="card-row">
+        <span class="row-label">火災保険</span>
+        <div class="row-input"><input type="number" id="b_ins" placeholder="6" inputmode="decimal"><span class="row-unit">万円/年</span></div>
+      </div>
+      <div class="card-row">
+        <span class="row-label">修繕・原状回復</span>
+        <div class="row-input"><input type="number" id="b_repair" value="3" inputmode="decimal"><span class="row-unit">%</span></div>
+      </div>
+      <div class="card-row">
+        <span class="row-label">広告料（AD）</span>
+        <div class="row-input"><input type="number" id="b_ad" value="2" inputmode="decimal"><span class="row-unit">%</span></div>
+      </div>
+    </div>
+
+    <div class="section-label">融資</div>
+    <div class="card">
+      <div class="card-row">
+        <span class="row-label">借入額</span>
+        <div class="row-input"><input type="number" id="b_loan" placeholder="10890" inputmode="decimal"><span class="row-unit">万円</span></div>
+      </div>
+      <div class="card-row">
+        <span class="row-label">金利</span>
+        <div class="row-input"><input type="number" id="b_rate" placeholder="2.5" inputmode="decimal"><span class="row-unit">%</span></div>
+      </div>
+      <div class="card-row">
+        <span class="row-label">返済期間</span>
+        <div class="row-input"><input type="number" id="b_years" placeholder="35" inputmode="decimal"><span class="row-unit">年</span></div>
+      </div>
+      <div class="card-row">
+        <span class="row-label">購入諸費用</span>
+        <div class="row-input"><input type="number" id="b_cost" value="7" inputmode="decimal"><span class="row-unit">%</span></div>
+      </div>
+    </div>
+    </div>
 
     <button class="calc-btn" onclick="calculate()">計算する</button>
 
     <!-- Result -->
     <div class="result-card" id="result-card">
       <div class="result-main">
-        <div class="result-label">ネット利回り</div>
+        <div class="result-label" id="main-label">ネット利回り</div>
         <div class="result-num empty" id="net-yield">—<span class="result-pct"></span></div>
       </div>
-      <div class="result-grid">
+      <div class="result-grid only-kubun">
         <div class="mini"><div class="mini-label">グロス利回り</div><div class="mini-val" id="gross">—</div></div>
         <div class="mini"><div class="mini-label">年間手取り</div><div class="mini-val" id="annual-net">—</div></div>
         <div class="mini"><div class="mini-label">月間手取り</div><div class="mini-val" id="monthly-net">—</div></div>
         <div class="mini"><div class="mini-label">年間家賃収入</div><div class="mini-val" id="annual-rent">—</div></div>
         <div class="mini"><div class="mini-label">年間経費</div><div class="mini-val" id="annual-cost">—</div></div>
         <div class="mini"><div class="mini-label">経費率</div><div class="mini-val" id="cost-rate">—</div></div>
+      </div>
+      <div class="result-grid only-ittou">
+        <div class="mini"><div class="mini-label">表面利回り</div><div class="mini-val" id="b-gross">—</div></div>
+        <div class="mini"><div class="mini-label">NOI</div><div class="mini-val" id="b-noi">—</div></div>
+        <div class="mini"><div class="mini-label">経費率</div><div class="mini-val" id="b-opex-rate">—</div></div>
+        <div class="mini"><div class="mini-label">年間返済</div><div class="mini-val" id="b-ds">—</div></div>
+        <div class="mini"><div class="mini-label">税引前CF</div><div class="mini-val" id="b-cf">—</div></div>
+        <div class="mini"><div class="mini-label">月間CF</div><div class="mini-val" id="b-cf-m">—</div></div>
+        <div class="mini"><div class="mini-label">DSCR</div><div class="mini-val" id="b-dscr">—</div></div>
+        <div class="mini"><div class="mini-label">自己資金</div><div class="mini-val" id="b-equity">—</div></div>
+        <div class="mini"><div class="mini-label">自己資金利回り</div><div class="mini-val" id="b-ccr">—</div></div>
       </div>
     </div>
 
@@ -280,6 +371,31 @@
 // ── State ──────────────────────────────────────────────
 let history = JSON.parse(localStorage.getItem('yield_history') || '[]');
 let lastResult = null;
+let mode = 'kubun';
+
+// ── Mode switch ────────────────────────────────────────
+function setMode(m) {
+  mode = m;
+  const page = document.getElementById('page-calc');
+  page.classList.remove('mode-kubun', 'mode-ittou');
+  page.classList.add('mode-' + m);
+  document.getElementById('seg-kubun').classList.toggle('active', m === 'kubun');
+  document.getElementById('seg-ittou').classList.toggle('active', m === 'ittou');
+  document.getElementById('main-label').textContent = m === 'ittou' ? 'NOI利回り' : 'ネット利回り';
+  resetResult();
+  try { localStorage.setItem('yield_mode', m); } catch (e) {}
+}
+
+function resetResult() {
+  const el = document.getElementById('net-yield');
+  el.innerHTML = '—<span class="result-pct"></span>';
+  el.className = 'result-num empty';
+  document.querySelectorAll('#result-card .mini-val').forEach(v => v.textContent = '—');
+  document.getElementById('record-box').classList.remove('visible');
+  lastResult = null;
+}
+
+try { if (localStorage.getItem('yield_mode') === 'ittou') setMode('ittou'); } catch (e) {}
 
 // ── Splash ─────────────────────────────────────────────
 setTimeout(() => {
@@ -299,6 +415,7 @@ function switchTab(tab) {
 
 // ── Calculate ──────────────────────────────────────────
 function calculate() {
+  if (mode === 'ittou') return calculateBuilding();
   const price       = parseFloat(document.getElementById('price').value) || 0;
   const rent        = parseFloat(document.getElementById('rent').value) || 0;
   const mgmt        = parseFloat(document.getElementById('mgmt').value) || 0;
@@ -319,12 +436,9 @@ function calculate() {
   const netYield    = (annualNet / price) * 100;
   const costRate    = rent > 0 ? (monthlyExp / rent) * 100 : 0;
 
-  lastResult = { price, rent, mgmt, repair, rental_mgmt, netYield, grossYield, annualRent, annualExp, annualNet, monthlyNet, costRate };
+  lastResult = { type: 'kubun', price, rent, mgmt, repair, rental_mgmt, netYield, grossYield, annualRent, annualExp, annualNet, monthlyNet, costRate };
 
-  // Update result display
-  const el = document.getElementById('net-yield');
-  el.innerHTML = netYield.toFixed(2) + '<span class="result-pct">%</span>';
-  el.className = 'result-num ' + (netYield >= 5 ? 'good' : netYield >= 3 ? 'mid' : 'bad');
+  showMainYield(netYield);
 
   document.getElementById('gross').textContent       = grossYield.toFixed(2) + '%';
   document.getElementById('annual-rent').textContent  = annualRent.toFixed(1) + '万円';
@@ -333,6 +447,82 @@ function calculate() {
   document.getElementById('monthly-net').textContent  = monthlyNet.toFixed(2) + '万円';
   document.getElementById('cost-rate').textContent    = costRate.toFixed(1) + '%';
 
+  showRank(netYield);
+}
+
+// ── Calculate (一棟) ────────────────────────────────────
+function calculateBuilding() {
+  const num = id => parseFloat(document.getElementById(id).value) || 0;
+  const price   = num('b_price');
+  const rent    = num('b_rent');
+  const vacancy = num('b_vacancy') / 100;
+  const pmRate  = num('b_pm') / 100;
+  const bm      = num('b_bm');
+  const tax     = num('b_tax');
+  const ins     = num('b_ins');
+  const repRate = num('b_repair') / 100;
+  const adRate  = num('b_ad') / 100;
+  const loan    = num('b_loan');
+  const rate    = num('b_rate');
+  const years   = num('b_years');
+  const costPct = num('b_cost') / 100;
+
+  if (!price || !rent) {
+    alert('物件価格と満室時月額家賃を入力してください');
+    return;
+  }
+  if (loan > 0 && !years) {
+    alert('返済期間を入力してください');
+    return;
+  }
+
+  // 万円/年
+  const annualRent = rent * 12;
+  const vacLoss    = annualRent * vacancy;
+  const egi        = annualRent - vacLoss;
+  const opex       = egi * pmRate + bm * 12 + tax + ins + annualRent * (repRate + adRate);
+  const noi        = egi - opex;
+  const debtSvc    = loanPayment(loan, rate, years) * 12;
+  const cf         = noi - debtSvc;
+  const equity     = price - loan + price * costPct;
+  const grossYield = (annualRent / price) * 100;
+  const netYield   = (noi / price) * 100;
+  const opexRate   = ((vacLoss + opex) / annualRent) * 100;
+  const dscr       = debtSvc > 0 ? noi / debtSvc : null;
+  const ccr        = equity > 0 ? (cf / equity) * 100 : null;
+
+  lastResult = { type: 'ittou', price, rent, loan, rate, years, netYield, grossYield, annualRent, noi, debtSvc, cf, equity, dscr, ccr };
+
+  showMainYield(netYield);
+  document.getElementById('b-gross').textContent     = grossYield.toFixed(2) + '%';
+  document.getElementById('b-noi').textContent       = noi.toFixed(1) + '万円';
+  document.getElementById('b-opex-rate').textContent = opexRate.toFixed(1) + '%';
+  document.getElementById('b-ds').textContent        = debtSvc.toFixed(1) + '万円';
+  document.getElementById('b-cf').textContent        = cf.toFixed(1) + '万円';
+  document.getElementById('b-cf-m').textContent      = (cf / 12).toFixed(2) + '万円';
+  document.getElementById('b-dscr').textContent      = dscr === null ? '—' : dscr.toFixed(2);
+  document.getElementById('b-equity').textContent    = equity.toFixed(0) + '万円';
+  document.getElementById('b-ccr').textContent       = ccr === null ? '—' : ccr.toFixed(1) + '%';
+
+  showRank(netYield);
+}
+
+// 元利均等の月返済額（万円）
+function loanPayment(loan, ratePct, years) {
+  if (!loan || !years) return 0;
+  const n = years * 12;
+  const i = ratePct / 100 / 12;
+  if (i === 0) return loan / n;
+  return loan * i / (1 - Math.pow(1 + i, -n));
+}
+
+function showMainYield(netYield) {
+  const el = document.getElementById('net-yield');
+  el.innerHTML = netYield.toFixed(2) + '<span class="result-pct">%</span>';
+  el.className = 'result-num ' + (netYield >= 5 ? 'good' : netYield >= 3 ? 'mid' : 'bad');
+}
+
+function showRank(netYield) {
   // Check rank
   const rank = getRank(netYield);
   const box  = document.getElementById('record-box');
@@ -410,16 +600,21 @@ function renderHistory() {
     const rankClass = rank === 1 ? 'rank-1' : rank === 2 ? 'rank-2' : rank === 3 ? 'rank-3' : 'rank-other';
     const yieldClass = h.netYield >= 5 ? 'good' : h.netYield >= 3 ? 'mid' : 'bad';
     const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank;
+    const isIttou = h.type === 'ittou';
+    const tag = isIttou ? '<span class="hist-tag">一棟</span>' : '';
+    const sub = isIttou
+      ? `${h.price}万円 ／ CF${h.cf.toFixed(0)}万円/年 ／ ${h.date}`
+      : `${h.price}万円 ／ 家賃${h.rent}万円 ／ ${h.date}`;
     return `
     <div class="hist-item">
       <div class="rank-badge ${rankClass}">${medal}</div>
       <div class="hist-info">
-        <div class="hist-name">${escHtml(h.name)}</div>
-        <div class="hist-sub">${h.price}万円 ／ 家賃${h.rent}万円 ／ ${h.date}</div>
+        <div class="hist-name">${tag}${escHtml(h.name)}</div>
+        <div class="hist-sub">${sub}</div>
       </div>
       <div class="hist-yield">
         <div class="hist-yield-val ${yieldClass}">${h.netYield.toFixed(2)}</div>
-        <div class="hist-yield-pct">% net</div>
+        <div class="hist-yield-pct">${isIttou ? '% NOI' : '% net'}</div>
       </div>
       <button class="hist-del" onclick="deleteRecord(${h.id})">✕</button>
     </div>`;
